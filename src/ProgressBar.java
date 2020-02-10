@@ -66,6 +66,11 @@ public class ProgressBar {
     private long initialProgress = 0;
     
     /**
+     * The initial duration of the progress bar in seconds.
+     */
+    private long initialDuration = 0;
+    
+    /**
      * The time of the current update of the progress bar.
      */
     private long currentUpdate = 0;
@@ -123,7 +128,7 @@ public class ProgressBar {
             time = System.currentTimeMillis() - startTime;
             progressBar.update(time);
         } while (time < 10000);
-        System.out.println();
+        progressBar.complete();
         System.out.println("Done");
         System.out.println();
         
@@ -137,7 +142,7 @@ public class ProgressBar {
                 progressBar.print();
             }
         } while (time < 10000);
-        System.out.println();
+        progressBar.complete();
         System.out.println("Done");
     }
     
@@ -232,10 +237,11 @@ public class ProgressBar {
      * If the time between updates is less than PROGRESS_BAR_MINIMUM_UPDATE_DELAY then the update will not take place until called again after the delay.
      *
      * @param newProgress The new progress of the progress bar.
+     * @param autoPrint   Whather or not to automatically print the progress bar after an update.
      * @return Whether the progress bar was updated or not.
      */
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    public synchronized boolean update(long newProgress) {
+    private synchronized boolean update(long newProgress, boolean autoPrint) {
         if (isComplete()) {
             return false;
         }
@@ -264,6 +270,18 @@ public class ProgressBar {
             print();
         }
         return update;
+    }
+    
+    /**
+     * Updates the progress bar.<br>
+     * If the time between updates is less than PROGRESS_BAR_MINIMUM_UPDATE_DELAY then the update will not take place until called again after the delay.
+     *
+     * @param newProgress The new progress of the progress bar.
+     * @return Whether the progress bar was updated or not.
+     */
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
+    public synchronized boolean update(long newProgress) {
+        return update(newProgress, autoPrint);
     }
     
     /**
@@ -363,15 +381,52 @@ public class ProgressBar {
     
     /**
      * Completes the progress bar.
+     *
+     * @param printTime      Whether or not to print the final time after the progress bar.
+     * @param additionalInfo Additional info to print at the end of the progress bar.
      */
     @SuppressWarnings("UseOfSystemOutOrSystemErr")
-    public void complete() {
-        current = total;
-        update = true;
+    public void complete(boolean printTime, String additionalInfo) {
+        update(total, false);
         String completeProgressBar = get();
+        if (printTime) {
+            long totalSeconds = initialDuration + ((currentUpdate - firstUpdate) / 1000000000);
+            long totalMinutes = totalSeconds / 60;
+            long totalHours = totalMinutes / 60;
+            long totalDays = totalHours / 24;
+            totalHours %= 24;
+            totalMinutes %= 60;
+            totalSeconds %= 60;
+            String totalDuration = ((totalDays > 0) ? totalDays + "d " : "") +
+                    ((totalDays > 0 || totalHours > 0) ? totalHours + "h " : "") +
+                    ((totalDays > 0 || totalHours > 0 || totalMinutes > 0) ? totalMinutes + "m " : "") +
+                    totalSeconds + "s";
+            totalDuration = trim(totalDuration);
+            completeProgressBar += " (" + totalDuration + ")";
+        }
+        if (!additionalInfo.isEmpty()) {
+            completeProgressBar += " " + additionalInfo;
+        }
         System.out.println(completeProgressBar);
         System.out.flush();
         System.err.flush();
+        update = false;
+    }
+    
+    /**
+     * Completes the progress bar.
+     *
+     * @param printTime Whether or not to print the final time after the progress bar.
+     */
+    public void complete(boolean printTime) {
+        complete(printTime, "");
+    }
+    
+    /**
+     * Completes the progress bar.
+     */
+    public void complete() {
+        complete(true);
     }
     
     /**
@@ -473,6 +528,15 @@ public class ProgressBar {
     }
     
     /**
+     * Sets the initial duration of the progress bar in seconds.
+     *
+     * @param initialDuration The initial duration of the progress bar in seconds.
+     */
+    public void setInitialDuration(long initialDuration) {
+        this.initialDuration = initialDuration;
+    }
+    
+    /**
      * Sets the flag indicating whether or not to automatically print the progress bar after an update.
      *
      * @param autoPrint The flag indicating whether or not to automatically print the progress bar after an update.
@@ -483,6 +547,36 @@ public class ProgressBar {
     
     
     //String Functions
+    
+    /**
+     * Trims the whitespace off of the front and back ends of a string.
+     *
+     * @param str The string to trim.
+     * @return The trimmed string.
+     */
+    public static String trim(String str) {
+        return lTrim(rTrim(str));
+    }
+    
+    /**
+     * Trims the whitespace off the left end of a string.
+     *
+     * @param str The string to trim.
+     * @return The trimmed string.
+     */
+    public static String lTrim(String str) {
+        return str.replaceAll("^[\\s\0]+", "");
+    }
+    
+    /**
+     * Trims the whitespace off the right end of a string.
+     *
+     * @param str The string to trim.
+     * @return The trimmed string.
+     */
+    public static String rTrim(String str) {
+        return str.replaceAll("[\\s\0]+$", "");
+    }
     
     /**
      * Creates a string of the length specified filled with spaces.
