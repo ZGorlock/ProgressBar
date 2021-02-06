@@ -4,11 +4,8 @@
  * Author:  Zachary Gill
  */
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-
-import resource.Console;
 
 /**
  * A progress bar for the console.
@@ -28,9 +25,9 @@ public class ProgressBar {
     public static final boolean DEFAULT_PROGRESS_BAR_AUTO_PRINT = true;
     
     /**
-     * The minimum number of nanoseconds that must pass before an update can occur.
+     * The minimum number of milliseconds that must pass before an update can occur.
      */
-    public static final long PROGRESS_BAR_MINIMUM_UPDATE_DELAY = TimeUnit.MILLISECONDS.toNanos(200);
+    public static final long PROGRESS_BAR_MINIMUM_UPDATE_DELAY = 200;
     
     
     //Fields
@@ -56,7 +53,7 @@ public class ProgressBar {
     private long current = 0;
     
     /**
-     * The completed size of the progress at the time of the last update.
+     * The completed progress of the progress bar at the time of the last update.
      */
     private long previous = 0;
     
@@ -111,46 +108,10 @@ public class ProgressBar {
     private boolean update = false;
     
     
-    //Main Method
-    
-    /**
-     * The main method.
-     *
-     * @param args Arguments to the main method.
-     */
-    public static void main(String[] args) {
-        ProgressBar progressBar = new ProgressBar("Title of Progress Bar", 10000, "ms");
-        
-        System.out.println("Start");
-        long startTime = System.currentTimeMillis();
-        long time;
-        do {
-            time = System.currentTimeMillis() - startTime;
-            progressBar.update(time);
-        } while (time < 10000);
-        progressBar.complete();
-        System.out.println("Done");
-        System.out.println();
-        
-        progressBar = new ProgressBar("Title of Progress Bar", 10000, "ms");
-        progressBar.autoPrint = false;
-        System.out.println("Start (No AutoPrint)");
-        startTime = System.currentTimeMillis();
-        do {
-            time = System.currentTimeMillis() - startTime;
-            if (progressBar.update(time)) {
-                progressBar.print();
-            }
-        } while (time < 10000);
-        progressBar.complete();
-        System.out.println("Done");
-    }
-    
-    
     //Constructors
     
     /**
-     * Creates a new ConsoleProgressBar object.
+     * Creates a new ProgressBar object.
      *
      * @param title     The title to display for the progress bar.
      * @param total     The total size of the progress bar.
@@ -167,47 +128,57 @@ public class ProgressBar {
     }
     
     /**
-     * Creates a new ConsoleProgressBar object.
+     * Creates a new ProgressBar object.
      *
      * @param title The title to display for the progress bar.
      * @param total The total size of the progress bar.
      * @param width The with of the bar in the progress bar.
      * @param units The units of the progress bar.
+     * @see #ProgressBar(String, long, int, String, boolean)
      */
     public ProgressBar(String title, long total, int width, String units) {
         this(title, total, width, units, DEFAULT_PROGRESS_BAR_AUTO_PRINT);
     }
     
     /**
-     * Creates a new ConsoleProgressBar object.
+     * Creates a new ProgressBar object.
      *
      * @param title The title to display for the progress bar.
      * @param total The total size of the progress bar.
      * @param units The units of the progress bar.
+     * @see #ProgressBar(String, long, int, String)
      */
     public ProgressBar(String title, long total, String units) {
         this(title, total, DEFAULT_PROGRESS_BAR_WIDTH, units);
     }
     
     /**
-     * Creates a new ConsoleProgressBar object.
+     * Creates a new ProgressBar object.
      *
      * @param title The title to display for the progress bar.
      * @param total The total size of the progress bar.
      * @param width The with of the bar in the progress bar.
+     * @see #ProgressBar(String, long, int, String)
      */
     public ProgressBar(String title, long total, int width) {
         this(title, total, width, "");
     }
     
     /**
-     * Creates a new ConsoleProgressBar object.
+     * Creates a new ProgressBar object.
      *
      * @param title The title to display for the progress bar.
      * @param total The total size of the progress bar.
+     * @see #ProgressBar(String, long, int, String)
      */
     public ProgressBar(String title, long total) {
         this(title, total, DEFAULT_PROGRESS_BAR_WIDTH, "");
+    }
+    
+    /**
+     * Private constructor for a new ProgressBar object.
+     */
+    private ProgressBar() {
     }
     
     
@@ -218,6 +189,11 @@ public class ProgressBar {
      * This must be displayed with print(), not println().
      *
      * @return The progress bar.
+     *
+     * @see #getPercentageString()
+     * @see #getBarString()
+     * @see #getRatioString()
+     * @see #getTimeRemainingString()
      */
     @SuppressWarnings("HardcodedLineSeparator")
     public String get() {
@@ -237,10 +213,9 @@ public class ProgressBar {
      * If the time between updates is less than PROGRESS_BAR_MINIMUM_UPDATE_DELAY then the update will not take place until called again after the delay.
      *
      * @param newProgress The new progress of the progress bar.
-     * @param autoPrint   Whather or not to automatically print the progress bar after an update.
+     * @param autoPrint   Whether or not to automatically print the progress bar after an update.
      * @return Whether the progress bar was updated or not.
      */
-    @SuppressWarnings("UseOfSystemOutOrSystemErr")
     private synchronized boolean update(long newProgress, boolean autoPrint) {
         if (isComplete()) {
             return false;
@@ -248,15 +223,17 @@ public class ProgressBar {
         
         if (firstUpdate == 0) {
             if (!title.isEmpty()) {
-                System.out.println(Console.cyan(title + ": "));
+                System.out.println(getTitleString());
                 System.out.flush();
+                System.err.flush();
             }
             firstUpdate = System.nanoTime();
         }
         
         progress = truncateNum(newProgress, 0, total).longValue();
         
-        if (((System.nanoTime() - currentUpdate) >= PROGRESS_BAR_MINIMUM_UPDATE_DELAY) || (progress == total)) {
+        boolean needsUpdate = (Math.abs(System.nanoTime() - currentUpdate) >= TimeUnit.MILLISECONDS.toNanos(PROGRESS_BAR_MINIMUM_UPDATE_DELAY));
+        if (needsUpdate || (progress == total)) {
             previous = current;
             current = progress;
             
@@ -278,8 +255,9 @@ public class ProgressBar {
      *
      * @param newProgress The new progress of the progress bar.
      * @return Whether the progress bar was updated or not.
+     *
+     * @see #update(long, boolean)
      */
-    @SuppressWarnings("UseOfSystemOutOrSystemErr")
     public synchronized boolean update(long newProgress) {
         return update(newProgress, autoPrint);
     }
@@ -288,6 +266,8 @@ public class ProgressBar {
      * Adds one to the current progress.
      *
      * @return Whether the progress bar was updated or not.
+     *
+     * @see #update(long)
      */
     public synchronized boolean addOne() {
         return update(progress + 1);
@@ -295,8 +275,9 @@ public class ProgressBar {
     
     /**
      * Prints the progress bar to the console.
+     *
+     * @see #get()
      */
-    @SuppressWarnings("UseOfSystemOutOrSystemErr")
     public synchronized void print() {
         String bar = get();
         System.out.print(bar);
@@ -311,13 +292,17 @@ public class ProgressBar {
      * @return The ratio of the progress bar.
      */
     public double getRatio() {
-        return (double) current / total;
+        return ((total <= 0) || (current > total)) ? 1 :
+               (current < 0) ? 0 :
+               (double) current / total;
     }
     
     /**
      * Calculates the percentage of the progress bar.
      *
      * @return The percentage of the progress bar.
+     *
+     * @see #getRatio()
      */
     public int getPercentage() {
         return (int) (getRatio() * 100);
@@ -329,13 +314,11 @@ public class ProgressBar {
      * @return The last recorded speed of the progress bar in units per second.
      */
     public double getLastSpeed() {
-        double recentTime = (double) (currentUpdate - previousUpdate) / TimeUnit.SECONDS.toNanos(1);
-        if ((recentTime == 0) || (previousUpdate == 0)) {
-            return 0;
-        }
-        long recentProgress = current - previous;
+        double recentTime = (double) Math.max((currentUpdate - previousUpdate), 0) / TimeUnit.SECONDS.toNanos(1);
+        long recentProgress = Math.max((current - previous), 0);
         
-        return recentProgress / recentTime;
+        return ((recentTime == 0) || (recentProgress == 0) || (current < 0) || (previous < 0) || (previousUpdate <= 0) || (currentUpdate <= 0)) ? 0 :
+               (recentProgress / recentTime);
     }
     
     /**
@@ -344,12 +327,23 @@ public class ProgressBar {
      * @return The average speed of the progress bar in units per second.
      */
     public double getAverageSpeed() {
-        double totalTime = (double) (currentUpdate - firstUpdate) / TimeUnit.SECONDS.toNanos(1);
-        if ((totalTime == 0) || (firstUpdate == 0)) {
-            return 0;
-        }
+        double totalTime = (double) Math.max((currentUpdate - firstUpdate), 0) / TimeUnit.SECONDS.toNanos(1);
         
-        return current / totalTime;
+        return ((totalTime == 0) || (current <= 0) || (firstUpdate < 0) || (currentUpdate <= 0)) ? 0 :
+               (current / totalTime);
+    }
+    
+    /**
+     * Calculates the total duration of the progress bar.
+     *
+     * @return The total duration of the progress bar in nanoseconds.
+     */
+    public long getTotalDuration() {
+        long totalDuration = Math.max((currentUpdate - firstUpdate), 0) +
+                (Math.max(initialDuration, 0) * TimeUnit.SECONDS.toNanos(1));
+        
+        return ((currentUpdate <= 0) || (firstUpdate < 0)) ? 0 :
+               totalDuration;
     }
     
     /**
@@ -358,16 +352,12 @@ public class ProgressBar {
      * @return The estimated time remaining in seconds.
      */
     public long getTimeRemaining() {
-        long remaining = total - current;
-        if (remaining == 0) {
-            return 0;
-        }
-        if (current == 0) {
-            return Long.MAX_VALUE;
-        }
+        long remainingProgress = Math.max((total - current), 0);
+        long totalProgress = Math.max((current - Math.max(initialProgress, 0)), 0);
+        long totalTime = Math.max((currentUpdate - firstUpdate), 0);
         
-        long timeRemaining = (long) (((double) remaining / (current - initialProgress)) * (currentUpdate - firstUpdate));
-        return TimeUnit.NANOSECONDS.toSeconds(timeRemaining);
+        return ((totalProgress == 0) || (totalTime == 0) || (current <= 0) || (currentUpdate <= 0) || (firstUpdate < 0)) ? Long.MAX_VALUE :
+               TimeUnit.NANOSECONDS.toSeconds((long) (((double) remainingProgress / totalProgress) * totalTime));
     }
     
     /**
@@ -376,7 +366,7 @@ public class ProgressBar {
      * @return Whether the progress bar is complete or not.
      */
     public boolean isComplete() {
-        return (current == total);
+        return (current >= total);
     }
     
     /**
@@ -384,29 +374,21 @@ public class ProgressBar {
      *
      * @param printTime      Whether or not to print the final time after the progress bar.
      * @param additionalInfo Additional info to print at the end of the progress bar.
+     * @see #get()
      */
-    @SuppressWarnings("UseOfSystemOutOrSystemErr")
     public void complete(boolean printTime, String additionalInfo) {
         update(total, false);
         String completeProgressBar = get();
+        
         if (printTime) {
-            long totalSeconds = initialDuration + ((currentUpdate - firstUpdate) / 1000000000);
-            long totalMinutes = totalSeconds / 60;
-            long totalHours = totalMinutes / 60;
-            long totalDays = totalHours / 24;
-            totalHours %= 24;
-            totalMinutes %= 60;
-            totalSeconds %= 60;
-            String totalDuration = ((totalDays > 0) ? totalDays + "d " : "") +
-                    ((totalDays > 0 || totalHours > 0) ? totalHours + "h " : "") +
-                    ((totalDays > 0 || totalHours > 0 || totalMinutes > 0) ? totalMinutes + "m " : "") +
-                    totalSeconds + "s";
-            totalDuration = trim(totalDuration);
-            completeProgressBar += " (" + totalDuration + ")";
+            long duration = TimeUnit.NANOSECONDS.toMillis(getTotalDuration());
+            String durationString = durationToDurationString(duration, false, false, true);
+            completeProgressBar += " (" + durationString + ')';
         }
         if (!additionalInfo.isEmpty()) {
-            completeProgressBar += " " + additionalInfo;
+            completeProgressBar += " - " + additionalInfo;
         }
+        
         System.out.println(completeProgressBar);
         System.out.flush();
         System.err.flush();
@@ -417,6 +399,7 @@ public class ProgressBar {
      * Completes the progress bar.
      *
      * @param printTime Whether or not to print the final time after the progress bar.
+     * @see #complete(boolean, String)
      */
     public void complete(boolean printTime) {
         complete(printTime, "");
@@ -424,46 +407,52 @@ public class ProgressBar {
     
     /**
      * Completes the progress bar.
+     *
+     * @see #complete(boolean)
      */
     public void complete() {
         complete(true);
     }
     
     /**
+     * Builds the title string for the progress bar.
+     *
+     * @return The title string.
+     *
+     * @see #getTitle()
+     */
+    public String getTitleString() {
+        return cyan(getTitle() + ": ");
+    }
+    
+    /**
      * Builds the percentage string for the progress bar.
      *
      * @return The percentage string.
+     *
+     * @see #getPercentage()
      */
     public String getPercentageString() {
         int percentage = getPercentage();
         String percentageString = padLeft(String.valueOf(percentage), 3);
         
-        return ((percentage == 100) ? Console.cyan(percentageString) : Console.green(percentageString)) + '%';
+        return ((percentage == 100) ? cyan(percentageString) : green(percentageString)) + '%';
     }
     
     /**
      * Builds the progress bar string for the progress bar.
      *
      * @return The progress bar string.
+     *
+     * @see #getRatio()
      */
     public String getBarString() {
         double ratio = getRatio();
-        int completed = (int) ((double) width * ratio);
-        int remaining = width - completed;
+        int completed = Math.max((int) ((double) width * ratio), 0);
+        int remaining = Math.max((width - completed - 1), 0);
         
-        StringBuilder bar = new StringBuilder();
-        bar.append('[');
-        StringBuilder progress = new StringBuilder();
-        progress.append("=".repeat(Math.max(0, completed)));
-        if (completed != width) {
-            progress.append('>');
-            remaining--;
-        }
-        bar.append((completed == width) ? Console.cyan(progress.toString()) : Console.green(progress.toString()));
-        bar.append(" ".repeat(Math.max(0, remaining)));
-        bar.append(']');
-        
-        return bar.toString();
+        String bar = "=".repeat(completed) + ((completed != width) ? '>' : "") + " ".repeat(remaining);
+        return '[' + ((completed == width) ? cyan(bar) : green(bar)) + ']';
     }
     
     /**
@@ -472,51 +461,150 @@ public class ProgressBar {
      * @return The ratio string.
      */
     public String getRatioString() {
-        String formattedCurrent = padLeft(String.valueOf(current), String.valueOf(total).length());
+        String formattedCurrent = padLeft(String.valueOf(Math.max(Math.min(current, total), 0)), String.valueOf(total).length());
         
-        return ((current == total) ? Console.cyan(formattedCurrent) : Console.green(formattedCurrent)) +
-                units + '/' +
-                Console.cyan(String.valueOf(total)) +
-                units;
+        return ((current >= total) ? cyan(formattedCurrent) : green(formattedCurrent)) + units + '/' +
+                cyan(String.valueOf(total)) + units;
     }
     
     /**
      * Builds the time remaining string for the progress bar.
      *
      * @return The time remaining string.
+     *
+     * @see #getTimeRemaining()
      */
     public String getTimeRemainingString() {
         long time = getTimeRemaining();
+        String durationStamp = durationToDurationStamp(TimeUnit.SECONDS.toMillis(time), false, false);
         
-        if (current == total) {
-            return Console.cyan("Complete");
-        }
-        if (time == Long.MAX_VALUE) {
-            return "ETA: --:--:--";
-        }
-        
-        int hours = (int) ((double) time / Duration.ofHours(1).getSeconds());
-        time -= hours * TimeUnit.HOURS.toSeconds(1);
-        
-        int minutes = (int) ((double) time / Duration.ofMinutes(1).getSeconds());
-        time -= minutes * TimeUnit.MINUTES.toSeconds(1);
-        
-        int seconds = (int) time;
-        
-        return "ETA: " + padZero(hours, 2) + ':' + padZero(minutes, 2) + ':' + padZero(seconds, 2);
+        return (current >= total) ? cyan("Complete") :
+               (time == Long.MAX_VALUE) ? "ETA: --:--:--" :
+               "ETA: " + durationStamp;
+    }
+    
+    
+    //Getters
+    
+    /**
+     * Returns the title of the progress bar.
+     *
+     * @return The title of the progress bar.
+     */
+    public String getTitle() {
+        return title;
+    }
+    
+    /**
+     * Returns the total progress of the progress bar.
+     *
+     * @return The total progress of the progress bar.
+     */
+    public long getTotal() {
+        return total;
+    }
+    
+    /**
+     * Returns the progress of the progress bar.
+     *
+     * @return The progress of the progress bar.
+     */
+    public long getProgress() {
+        return progress;
+    }
+    
+    /**
+     * Returns the currently completed progress of the progress bar.
+     *
+     * @return The currently completed progress of the progress bar.
+     */
+    public long getCurrent() {
+        return current;
+    }
+    
+    /**
+     * Returns the completed progress of the progress bar at the time of the last update.
+     *
+     * @return The completed progress of the progress bar at the time of the last update.
+     */
+    public long getPrevious() {
+        return previous;
+    }
+    
+    /**
+     * Returns the initial progress of the progress bar.
+     *
+     * @return The initial progress of the progress bar.
+     */
+    public long getInitialProgress() {
+        return initialProgress;
+    }
+    
+    /**
+     * Returns the initial duration of the progress bar in seconds.
+     *
+     * @return The initial duration of the progress bar in seconds.
+     */
+    public long getInitialDuration() {
+        return initialDuration;
+    }
+    
+    /**
+     * Returns the time of the current update of the progress bar.
+     *
+     * @return The time of the current update of the progress bar.
+     */
+    public long getCurrentUpdate() {
+        return currentUpdate;
+    }
+    
+    /**
+     * Returns the time of the previous update of the progress bar.
+     *
+     * @return The time of the previous update of the progress bar.
+     */
+    public long getPreviousUpdate() {
+        return previousUpdate;
+    }
+    
+    /**
+     * Returns the time the progress bar was updated for the firstUpdate time.
+     *
+     * @return The time the progress bar was updated for the firstUpdate time.
+     */
+    public long getFirstUpdate() {
+        return firstUpdate;
+    }
+    
+    /**
+     * Returns the width of the bar in the progress bar.
+     *
+     * @return The width of the bar in the progress bar.
+     */
+    public int getWidth() {
+        return width;
+    }
+    
+    /**
+     * Returns the units of the progress bar.
+     *
+     * @return The units of the progress bar.
+     */
+    public String getUnits() {
+        return units;
+    }
+    
+    /**
+     * Returns the flag indicating whether or not to automatically print the progress bar after an update.
+     *
+     * @return The flag indicating whether or not to automatically print the progress bar after an update.
+     */
+    public boolean getAutoPrint() {
+        return autoPrint;
     }
     
     
     //Setters
-    
-    /**
-     * Sets the total progress of the progress bar.
-     *
-     * @param total The total progress of the progress bar.
-     */
-    public void setTotal(long total) {
-        this.total = total;
-    }
     
     /**
      * Sets the initial progress of the progress bar.
@@ -546,7 +634,30 @@ public class ProgressBar {
     }
     
     
-    //String Functions
+    //Console Methods
+    
+    /**
+     * Creates a cyan string.
+     *
+     * @param str The string.
+     * @return The cyan string.
+     */
+    private String cyan(String str) {
+        return "\u001B[96m" + str + "\u001B[0m";
+    }
+    
+    /**
+     * Creates a green string.
+     *
+     * @param str The string.
+     * @return The green string.
+     */
+    private String green(String str) {
+        return "\u001B[92m" + str + "\u001B[0m";
+    }
+    
+    
+    //String Methods
     
     /**
      * Trims the whitespace off of the front and back ends of a string.
@@ -554,7 +665,7 @@ public class ProgressBar {
      * @param str The string to trim.
      * @return The trimmed string.
      */
-    public static String trim(String str) {
+    private String trim(String str) {
         return lTrim(rTrim(str));
     }
     
@@ -564,7 +675,7 @@ public class ProgressBar {
      * @param str The string to trim.
      * @return The trimmed string.
      */
-    public static String lTrim(String str) {
+    private String lTrim(String str) {
         return str.replaceAll("^[\\s\0]+", "");
     }
     
@@ -574,7 +685,7 @@ public class ProgressBar {
      * @param str The string to trim.
      * @return The trimmed string.
      */
-    public static String rTrim(String str) {
+    private String rTrim(String str) {
         return str.replaceAll("[\\s\0]+$", "");
     }
     
@@ -584,7 +695,7 @@ public class ProgressBar {
      * @param num The length to make the string.
      * @return A new string filled with spaces to the length specified.
      */
-    public static String spaces(int num) {
+    private String spaces(int num) {
         return fillStringOfLength(' ', num);
     }
     
@@ -595,7 +706,7 @@ public class ProgressBar {
      * @param size The length to make the string.
      * @return A new string filled with the specified character to the length specified.
      */
-    public static String fillStringOfLength(char fill, int size) {
+    private String fillStringOfLength(char fill, int size) {
         return padRight("", size, fill);
     }
     
@@ -607,7 +718,7 @@ public class ProgressBar {
      * @param padding The character to pad with.
      * @return The padded string.
      */
-    public static String padRight(String str, int size, char padding) {
+    private String padRight(String str, int size, char padding) {
         if (str.length() >= size) {
             return str;
         }
@@ -627,7 +738,7 @@ public class ProgressBar {
      * @param padding The character to pad with.
      * @return The padded string.
      */
-    public static String padLeft(String str, int size, char padding) {
+    private String padLeft(String str, int size, char padding) {
         if (str.length() >= size) {
             return str;
         }
@@ -646,7 +757,7 @@ public class ProgressBar {
      * @param size The target size of the string.
      * @return The padded string.
      */
-    public static String padLeft(String str, int size) {
+    private String padLeft(String str, int size) {
         return padLeft(str, size, ' ');
     }
     
@@ -657,7 +768,7 @@ public class ProgressBar {
      * @param size The specified size of the final string.
      * @return The padded number string.
      */
-    public static String padZero(String str, int size) {
+    private String padZero(String str, int size) {
         if (str.length() >= size) {
             return str;
         }
@@ -672,12 +783,12 @@ public class ProgressBar {
      * @param size The specified size of the final string.
      * @return The padded number string.
      */
-    public static String padZero(int num, int size) {
+    private String padZero(int num, int size) {
         return padZero(Integer.toString(num), size);
     }
     
     
-    //Bound Functions
+    //Bound Methods
     
     /**
      * Forces a number within defined bounds.
@@ -687,7 +798,7 @@ public class ProgressBar {
      * @param max The maximum value allowed.
      * @return The truncated number.
      */
-    public static Number truncateNum(Number num, Number min, Number max) {
+    private Number truncateNum(Number num, Number min, Number max) {
         Number n = num;
         if (num.doubleValue() < min.doubleValue()) {
             n = min;
@@ -696,6 +807,69 @@ public class ProgressBar {
             n = max;
         }
         return n;
+    }
+    
+    
+    //DateTime Methods
+    
+    /**
+     * Converts a length in milliseconds to a duration string.
+     *
+     * @param duration         The duration in milliseconds.
+     * @param abbreviate       Whether or not to skip time units with zero value.
+     * @param showMilliseconds Whether or not to include milliseconds in the duration string.
+     * @param abbreviateUnits  Whether or not to abbreviate time units.
+     * @return The duration string.
+     */
+    private String durationToDurationString(long duration, boolean abbreviate, boolean showMilliseconds, boolean abbreviateUnits) {
+        boolean isNegative = duration < 0;
+        duration = Math.abs(duration);
+        int milliseconds = (int) (duration % 1000);
+        duration = duration / 1000;
+        int seconds = (int) (duration % 60);
+        duration = duration / 60;
+        int minutes = (int) (duration % 60);
+        duration = duration / 60;
+        int hours = (int) (duration % 24);
+        duration = duration / 24;
+        int days = (int) (duration);
+        
+        StringBuilder durationString = new StringBuilder();
+        durationString.append(((!abbreviate && (durationString.length() > 0)) || (days > 0)) ? (days + (abbreviateUnits ? "d " : (" Day" + ((days == 1) ? "" : "s") + " "))) : "");
+        durationString.append(((!abbreviate && (durationString.length() > 0)) || (hours > 0)) ? (hours + (abbreviateUnits ? "h " : (" Hour" + ((hours == 1) ? "" : "s") + " "))) : "");
+        durationString.append(((!abbreviate && (durationString.length() > 0)) || (minutes > 0)) ? (minutes + (abbreviateUnits ? "m " : (" Minute" + ((minutes == 1) ? "" : "s") + " "))) : "");
+        durationString.append(((!abbreviate && (durationString.length() > 0)) || (seconds > 0)) ? (seconds + (abbreviateUnits ? "s " : (" Second" + ((seconds == 1) ? "" : "s") + " "))) : "");
+        durationString.append(showMilliseconds ? (((!abbreviate && (durationString.length() > 0)) || (milliseconds > 0)) ? (milliseconds + (abbreviateUnits ? "ms " : (" Millisecond" + ((milliseconds == 1) ? "" : "s") + " "))) : "") : "");
+        durationString.insert(0, ((isNegative && (durationString.length() > 0)) ? (abbreviateUnits ? "- " : "Negative ") : ""));
+        return trim(durationString.toString());
+    }
+    
+    /**
+     * Converts a length in milliseconds to a duration stamp.
+     *
+     * @param duration         The duration in milliseconds.
+     * @param abbreviate       Whether or not to omit leading and trailing zeros.
+     * @param showMilliseconds Whether or not to include milliseconds in the duration stamp.
+     * @return The duration stamp.
+     */
+    private String durationToDurationStamp(long duration, boolean abbreviate, boolean showMilliseconds) {
+        boolean isNegative = duration < 0;
+        duration = Math.abs(duration);
+        int milliseconds = (int) (duration % 1000);
+        duration = duration / 1000;
+        int seconds = (int) (duration % 60);
+        duration = duration / 60;
+        int minutes = (int) (duration % 60);
+        duration = duration / 60;
+        int hours = (int) (duration);
+        
+        StringBuilder durationStamp = new StringBuilder();
+        durationStamp.append((!abbreviate || (hours > 0)) ? (((!abbreviate || (durationStamp.length() > 0)) ? padZero(hours, 2) : hours) + ":") : "");
+        durationStamp.append((!abbreviate || (minutes > 0) || (durationStamp.length() > 0)) ? (((!abbreviate || (durationStamp.length() > 0)) ? padZero(minutes, 2) : minutes) + ":") : "");
+        durationStamp.append((!abbreviate || (seconds > 0) || (durationStamp.length() > 0)) ? (((!abbreviate || (durationStamp.length() > 0)) ? padZero(seconds, 2) : seconds) + "") : "0");
+        durationStamp.append(showMilliseconds ? (((!abbreviate || (milliseconds > 0)) ? "." : "") + (!abbreviate ? padZero(milliseconds, 3) : padZero(milliseconds, 3).replaceAll("0+$", ""))) : "");
+        durationStamp.insert(0, (isNegative ? "-" : ""));
+        return durationStamp.toString();
     }
     
 }
