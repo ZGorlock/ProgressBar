@@ -189,7 +189,6 @@ public class ProgressBar {
      * This must be displayed with print(), not println().
      *
      * @return The progress bar.
-     *
      * @see #getPercentageString()
      * @see #getBarString()
      * @see #getRatioString()
@@ -255,7 +254,6 @@ public class ProgressBar {
      *
      * @param newProgress The new progress of the progress bar.
      * @return Whether the progress bar was updated or not.
-     *
      * @see #update(long, boolean)
      */
     public synchronized boolean update(long newProgress) {
@@ -266,7 +264,6 @@ public class ProgressBar {
      * Adds one to the current progress.
      *
      * @return Whether the progress bar was updated or not.
-     *
      * @see #update(long)
      */
     public synchronized boolean addOne() {
@@ -301,7 +298,6 @@ public class ProgressBar {
      * Calculates the percentage of the progress bar.
      *
      * @return The percentage of the progress bar.
-     *
      * @see #getRatio()
      */
     public int getPercentage() {
@@ -418,7 +414,6 @@ public class ProgressBar {
      * Builds the title string for the progress bar.
      *
      * @return The title string.
-     *
      * @see #getTitle()
      */
     public String getTitleString() {
@@ -429,7 +424,6 @@ public class ProgressBar {
      * Builds the percentage string for the progress bar.
      *
      * @return The percentage string.
-     *
      * @see #getPercentage()
      */
     public String getPercentageString() {
@@ -443,7 +437,6 @@ public class ProgressBar {
      * Builds the progress bar string for the progress bar.
      *
      * @return The progress bar string.
-     *
      * @see #getRatio()
      */
     public String getBarString() {
@@ -471,7 +464,6 @@ public class ProgressBar {
      * Builds the time remaining string for the progress bar.
      *
      * @return The time remaining string.
-     *
      * @see #getTimeRemaining()
      */
     public String getTimeRemainingString() {
