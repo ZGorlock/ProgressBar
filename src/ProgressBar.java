@@ -4,7 +4,9 @@
  * Author:  Zachary Gill
  */
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -634,7 +636,7 @@ public class ProgressBar {
      * @param str The string.
      * @return The cyan string.
      */
-    private String cyan(String str) {
+    public static String cyan(String str) {
         return "\u001B[96m" + str + "\u001B[0m";
     }
     
@@ -644,7 +646,7 @@ public class ProgressBar {
      * @param str The string.
      * @return The green string.
      */
-    private String green(String str) {
+    public static String green(String str) {
         return "\u001B[92m" + str + "\u001B[0m";
     }
     
@@ -652,12 +654,45 @@ public class ProgressBar {
     //String Methods
     
     /**
+     * Tokenizes a passed string into its tokens and returns a list of those tokens.
+     *
+     * @param str   The string to tokenize.
+     * @param delim The regex delimiter to separate tokens by.
+     * @param hard  Whether or not to include empty tokens.
+     * @return A list of all the tokens of the passed string.
+     */
+    public static List<String> tokenize(String str, String delim, boolean hard) {
+        String[] lines = str.split(delim, (hard ? -1 : 0));
+        return new ArrayList<>(Arrays.asList(lines));
+    }
+    
+    /**
+     * Splits a passed string by line separators and returns a list of lines.
+     *
+     * @param str The string to split.
+     * @return A list of the lines in the passed string.
+     */
+    public static List<String> splitLines(String str) {
+        return tokenize(str, "\\r?\\n", true);
+    }
+    
+    /**
+     * Determines if a string is whitespace or not.
+     *
+     * @param str The string.
+     * @return Whether the string is whitespace or not.
+     */
+    public static boolean isWhitespace(String str) {
+        return str.matches("[\\s\0]*");
+    }
+    
+    /**
      * Trims the whitespace off of the front and back ends of a string.
      *
      * @param str The string to trim.
      * @return The trimmed string.
      */
-    private String trim(String str) {
+    public static String trim(String str) {
         return lTrim(rTrim(str));
     }
     
@@ -667,7 +702,7 @@ public class ProgressBar {
      * @param str The string to trim.
      * @return The trimmed string.
      */
-    private String lTrim(String str) {
+    public static String lTrim(String str) {
         return str.replaceAll("^[\\s\0]+", "");
     }
     
@@ -677,7 +712,7 @@ public class ProgressBar {
      * @param str The string to trim.
      * @return The trimmed string.
      */
-    private String rTrim(String str) {
+    public static String rTrim(String str) {
         return str.replaceAll("[\\s\0]+$", "");
     }
     
@@ -687,7 +722,7 @@ public class ProgressBar {
      * @param num The length to make the string.
      * @return A new string filled with spaces to the length specified.
      */
-    private String spaces(int num) {
+    public static String spaces(int num) {
         return fillStringOfLength(' ', num);
     }
     
@@ -698,8 +733,18 @@ public class ProgressBar {
      * @param size The length to make the string.
      * @return A new string filled with the specified character to the length specified.
      */
-    private String fillStringOfLength(char fill, int size) {
+    public static String fillStringOfLength(char fill, int size) {
         return padRight("", size, fill);
+    }
+    
+    /**
+     * Removes the console escape codes from a string.
+     *
+     * @param string The string to operate on.
+     * @return The string with all console escape codes removed.
+     */
+    public static String removeConsoleEscapeCharacters(String string) {
+        return string.replaceAll("\u001B[^m]*m", "");
     }
     
     /**
@@ -710,7 +755,7 @@ public class ProgressBar {
      * @param padding The character to pad with.
      * @return The padded string.
      */
-    private String padRight(String str, int size, char padding) {
+    public static String padRight(String str, int size, char padding) {
         if (str.length() >= size) {
             return str;
         }
@@ -730,7 +775,7 @@ public class ProgressBar {
      * @param padding The character to pad with.
      * @return The padded string.
      */
-    private String padLeft(String str, int size, char padding) {
+    public static String padLeft(String str, int size, char padding) {
         if (str.length() >= size) {
             return str;
         }
@@ -749,7 +794,7 @@ public class ProgressBar {
      * @param size The target size of the string.
      * @return The padded string.
      */
-    private String padLeft(String str, int size) {
+    public static String padLeft(String str, int size) {
         return padLeft(str, size, ' ');
     }
     
@@ -760,7 +805,7 @@ public class ProgressBar {
      * @param size The specified size of the final string.
      * @return The padded number string.
      */
-    private String padZero(String str, int size) {
+    public static String padZero(String str, int size) {
         if (str.length() >= size) {
             return str;
         }
@@ -775,7 +820,7 @@ public class ProgressBar {
      * @param size The specified size of the final string.
      * @return The padded number string.
      */
-    private String padZero(int num, int size) {
+    public static String padZero(int num, int size) {
         return padZero(Integer.toString(num), size);
     }
     
@@ -790,7 +835,7 @@ public class ProgressBar {
      * @param max The maximum value allowed.
      * @return The truncated number.
      */
-    private Number truncateNum(Number num, Number min, Number max) {
+    public static Number truncateNum(Number num, Number min, Number max) {
         Number n = num;
         if (num.doubleValue() < min.doubleValue()) {
             n = min;
@@ -813,7 +858,7 @@ public class ProgressBar {
      * @param abbreviateUnits  Whether or not to abbreviate time units.
      * @return The duration string.
      */
-    private String durationToDurationString(long duration, boolean abbreviate, boolean showMilliseconds, boolean abbreviateUnits) {
+    public static String durationToDurationString(long duration, boolean abbreviate, boolean showMilliseconds, boolean abbreviateUnits) {
         boolean isNegative = duration < 0;
         duration = Math.abs(duration);
         int milliseconds = (int) (duration % 1000);
@@ -844,7 +889,7 @@ public class ProgressBar {
      * @param showMilliseconds Whether or not to include milliseconds in the duration stamp.
      * @return The duration stamp.
      */
-    private String durationToDurationStamp(long duration, boolean abbreviate, boolean showMilliseconds) {
+    public static String durationToDurationStamp(long duration, boolean abbreviate, boolean showMilliseconds) {
         boolean isNegative = duration < 0;
         duration = Math.abs(duration);
         int milliseconds = (int) (duration % 1000);
