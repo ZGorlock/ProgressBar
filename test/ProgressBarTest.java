@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import commons.string.StringUtility;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -175,7 +176,7 @@ public class ProgressBarTest {
         Mockito.when(progressBar.getRatioString()).thenReturn(" 5100B/10000B");
         Mockito.when(progressBar.getTimeRemainingString()).thenReturn("ETA: 00:15:43");
         int spaceCount = progressBar.getWidth() + ((progressBar.getTotal() + progressBar.getUnits()).length() * 2) + 30;
-        String expected = "\r" + ProgressBar.spaces(spaceCount) + "\r" +
+        String expected = "\r" + StringUtility.spaces(spaceCount) + "\r" +
                 " 51% [==========>         ]  5100B/10000B - ETA: 00:15:43";
         
         //initial
@@ -380,11 +381,11 @@ public class ProgressBarTest {
             Thread.sleep(250);
         }
         progressBar.update(10000);
-        List<String> lines = ProgressBar.splitLines(out.toString()
+        List<String> lines = StringUtility.splitLines(out.toString()
                 .replace("\r", "\r\n").replace("\n\n", "\n"))
                 .stream()
-                .filter(e -> !e.isEmpty() && !ProgressBar.isWhitespace(e))
-                .map(ProgressBar::removeConsoleEscapeCharacters)
+                .filter(e -> !e.isEmpty() && !StringUtility.isWhitespace(e))
+                .map(StringUtility::removeConsoleEscapeCharacters)
                 .collect(Collectors.toList());
         Assert.assertEquals(22, lines.size());
         Assert.assertEquals("Test Bar: ", lines.get(0));
@@ -392,19 +393,19 @@ public class ProgressBarTest {
         Assert.assertEquals("  5% [=>                  ]   512B/10000B - ETA: 00:00:04", lines.get(2));
         Assert.assertEquals(" 10% [==>                 ]  1024B/10000B - ETA: 00:00:04", lines.get(3));
         Assert.assertEquals(" 15% [===>                ]  1536B/10000B - ETA: 00:00:04", lines.get(4));
-        Assert.assertEquals(" 20% [====>               ]  2048B/10000B - ETA: 00:00:03", lines.get(5));
+        Assert.assertEquals(" 20% [====>               ]  2048B/10000B - ETA: 00:00:0", StringUtility.rShear(lines.get(5), 1));
         Assert.assertEquals(" 25% [=====>              ]  2560B/10000B - ETA: 00:00:03", lines.get(6));
         Assert.assertEquals(" 30% [======>             ]  3072B/10000B - ETA: 00:00:03", lines.get(7));
         Assert.assertEquals(" 35% [=======>            ]  3584B/10000B - ETA: 00:00:03", lines.get(8));
-        Assert.assertEquals(" 40% [========>           ]  4096B/10000B - ETA: 00:00:02", lines.get(9));
+        Assert.assertEquals(" 40% [========>           ]  4096B/10000B - ETA: 00:00:0", StringUtility.rShear(lines.get(9), 1));
         Assert.assertEquals(" 46% [=========>          ]  4608B/10000B - ETA: 00:00:02", lines.get(10));
         Assert.assertEquals(" 51% [==========>         ]  5120B/10000B - ETA: 00:00:02", lines.get(11));
         Assert.assertEquals(" 56% [===========>        ]  5632B/10000B - ETA: 00:00:02", lines.get(12));
-        Assert.assertEquals(" 61% [============>       ]  6144B/10000B - ETA: 00:00:01", lines.get(13));
+        Assert.assertEquals(" 61% [============>       ]  6144B/10000B - ETA: 00:00:0", StringUtility.rShear(lines.get(13), 1));
         Assert.assertEquals(" 66% [=============>      ]  6656B/10000B - ETA: 00:00:01", lines.get(14));
         Assert.assertEquals(" 71% [==============>     ]  7168B/10000B - ETA: 00:00:01", lines.get(15));
         Assert.assertEquals(" 76% [===============>    ]  7680B/10000B - ETA: 00:00:01", lines.get(16));
-        Assert.assertEquals(" 81% [================>   ]  8192B/10000B - ETA: 00:00:00", lines.get(17));
+        Assert.assertEquals(" 81% [================>   ]  8192B/10000B - ETA: 00:00:0", StringUtility.rShear(lines.get(17), 1));
         Assert.assertEquals(" 87% [=================>  ]  8704B/10000B - ETA: 00:00:00", lines.get(18));
         Assert.assertEquals(" 92% [==================> ]  9216B/10000B - ETA: 00:00:00", lines.get(19));
         Assert.assertEquals(" 97% [===================>]  9728B/10000B - ETA: 00:00:00", lines.get(20));
@@ -1052,7 +1053,7 @@ public class ProgressBarTest {
         Assert.assertFalse(Whitebox.getInternalState(progressBar, "update"));
         Assert.assertEquals(
                 "100% [====================] 10000B/10000B - Complete",
-                ProgressBar.trim(ProgressBar.removeConsoleEscapeCharacters(out.toString()).replaceAll("[\r\n]", "").replaceAll("\\s+", " "))
+                StringUtility.trim(StringUtility.removeConsoleEscapeCharacters(out.toString()).replaceAll("[\r\n]", "").replaceAll("\\s+", " "))
         );
         System.setOut(saveOut);
         
@@ -1077,7 +1078,7 @@ public class ProgressBarTest {
         Assert.assertFalse(Whitebox.getInternalState(progressBar, "update"));
         Assert.assertEquals(
                 "100% [====================] 10000B/10000B - Complete (16h 0m 53s)",
-                ProgressBar.trim(ProgressBar.removeConsoleEscapeCharacters(out.toString()).replaceAll("[\r\n]", "").replaceAll("\\s+", " "))
+                StringUtility.trim(StringUtility.removeConsoleEscapeCharacters(out.toString()).replaceAll("[\r\n]", "").replaceAll("\\s+", " "))
         );
         Mockito.when(progressBar.getTotalDuration()).thenCallRealMethod();
         System.setOut(saveOut);
@@ -1099,7 +1100,7 @@ public class ProgressBarTest {
         Assert.assertFalse(Whitebox.getInternalState(progressBar, "update"));
         Assert.assertEquals(
                 "100% [====================] 10000B/10000B - Complete - Press any key to continue...",
-                ProgressBar.trim(ProgressBar.removeConsoleEscapeCharacters(out.toString()).replaceAll("[\r\n]", "").replaceAll("\\s+", " "))
+                StringUtility.trim(StringUtility.removeConsoleEscapeCharacters(out.toString()).replaceAll("[\r\n]", "").replaceAll("\\s+", " "))
         );
         System.setOut(saveOut);
         
@@ -1124,7 +1125,7 @@ public class ProgressBarTest {
         Assert.assertFalse(Whitebox.getInternalState(progressBar, "update"));
         Assert.assertEquals(
                 "100% [====================] 10000B/10000B - Complete (16h 0m 53s) - Press any key to continue...",
-                ProgressBar.trim(ProgressBar.removeConsoleEscapeCharacters(out.toString()).replaceAll("[\r\n]", "").replaceAll("\\s+", " "))
+                StringUtility.trim(StringUtility.removeConsoleEscapeCharacters(out.toString()).replaceAll("[\r\n]", "").replaceAll("\\s+", " "))
         );
         Mockito.when(progressBar.getTotalDuration()).thenCallRealMethod();
         System.setOut(saveOut);

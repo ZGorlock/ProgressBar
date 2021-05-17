@@ -4,10 +4,12 @@
  * Author:  Zachary Gill
  */
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import commons.console.Console;
+import commons.math.BoundUtility;
+import commons.string.StringUtility;
+import commons.time.DateTimeUtility;
 
 /**
  * A progress bar for the console.
@@ -199,7 +201,7 @@ public class ProgressBar {
     @SuppressWarnings("HardcodedLineSeparator")
     public String get() {
         if (update) {
-            progressBar = '\r' + spaces(width + ((String.valueOf(total).length() + units.length()) * 2) + 30) + '\r' +
+            progressBar = '\r' + StringUtility.spaces(width + ((String.valueOf(total).length() + units.length()) * 2) + 30) + '\r' +
                     getPercentageString() + ' ' +
                     getBarString() + ' ' +
                     getRatioString() + " - " +
@@ -231,7 +233,7 @@ public class ProgressBar {
             firstUpdate = System.nanoTime();
         }
         
-        progress = truncateNum(newProgress, 0, total).longValue();
+        progress = BoundUtility.truncateNum(newProgress, 0, total).longValue();
         
         boolean needsUpdate = (Math.abs(System.nanoTime() - currentUpdate) >= TimeUnit.MILLISECONDS.toNanos(PROGRESS_BAR_MINIMUM_UPDATE_DELAY));
         if (needsUpdate || (progress == total)) {
@@ -380,7 +382,7 @@ public class ProgressBar {
         
         if (printTime) {
             long duration = TimeUnit.NANOSECONDS.toMillis(getTotalDuration());
-            String durationString = durationToDurationString(duration, false, false, true);
+            String durationString = DateTimeUtility.durationToDurationString(duration, false, false, true);
             completeProgressBar += " (" + durationString + ')';
         }
         if (!additionalInfo.isEmpty()) {
@@ -430,7 +432,7 @@ public class ProgressBar {
      */
     public String getPercentageString() {
         int percentage = getPercentage();
-        String percentageString = padLeft(String.valueOf(percentage), 3);
+        String percentageString = StringUtility.padLeft(String.valueOf(percentage), 3);
         
         return ((percentage == 100) ? cyan(percentageString) : green(percentageString)) + '%';
     }
@@ -456,7 +458,7 @@ public class ProgressBar {
      * @return The ratio string.
      */
     public String getRatioString() {
-        String formattedCurrent = padLeft(String.valueOf(Math.max(Math.min(current, total), 0)), String.valueOf(total).length());
+        String formattedCurrent = StringUtility.padLeft(String.valueOf(Math.max(Math.min(current, total), 0)), String.valueOf(total).length());
         
         return ((current >= total) ? cyan(formattedCurrent) : green(formattedCurrent)) + units + '/' +
                 cyan(String.valueOf(total)) + units;
@@ -470,7 +472,7 @@ public class ProgressBar {
      */
     public String getTimeRemainingString() {
         long time = getTimeRemaining();
-        String durationStamp = durationToDurationStamp(TimeUnit.SECONDS.toMillis(time), false, false);
+        String durationStamp = DateTimeUtility.durationToDurationStamp(TimeUnit.SECONDS.toMillis(time), false, false);
         
         return (current >= total) ? cyan("Complete") :
                (time == Long.MAX_VALUE) ? "ETA: --:--:--" :
@@ -628,7 +630,7 @@ public class ProgressBar {
     }
     
     
-    //Console Methods
+    //Functions
     
     /**
      * Creates a cyan string.
@@ -637,7 +639,7 @@ public class ProgressBar {
      * @return The cyan string.
      */
     public static String cyan(String str) {
-        return "\u001B[96m" + str + "\u001B[0m";
+        return Console.color(str, Console.ConsoleEffect.CYAN);
     }
     
     /**
@@ -647,266 +649,7 @@ public class ProgressBar {
      * @return The green string.
      */
     public static String green(String str) {
-        return "\u001B[92m" + str + "\u001B[0m";
-    }
-    
-    
-    //String Methods
-    
-    /**
-     * Tokenizes a passed string into its tokens and returns a list of those tokens.
-     *
-     * @param str   The string to tokenize.
-     * @param delim The regex delimiter to separate tokens by.
-     * @param hard  Whether or not to include empty tokens.
-     * @return A list of all the tokens of the passed string.
-     */
-    public static List<String> tokenize(String str, String delim, boolean hard) {
-        String[] lines = str.split(delim, (hard ? -1 : 0));
-        return new ArrayList<>(Arrays.asList(lines));
-    }
-    
-    /**
-     * Splits a passed string by line separators and returns a list of lines.
-     *
-     * @param str The string to split.
-     * @return A list of the lines in the passed string.
-     */
-    public static List<String> splitLines(String str) {
-        return tokenize(str, "\\r?\\n", true);
-    }
-    
-    /**
-     * Determines if a string is whitespace or not.
-     *
-     * @param str The string.
-     * @return Whether the string is whitespace or not.
-     */
-    public static boolean isWhitespace(String str) {
-        return str.matches("[\\s\0]*");
-    }
-    
-    /**
-     * Trims the whitespace off of the front and back ends of a string.
-     *
-     * @param str The string to trim.
-     * @return The trimmed string.
-     */
-    public static String trim(String str) {
-        return lTrim(rTrim(str));
-    }
-    
-    /**
-     * Trims the whitespace off the left end of a string.
-     *
-     * @param str The string to trim.
-     * @return The trimmed string.
-     */
-    public static String lTrim(String str) {
-        return str.replaceAll("^[\\s\0]+", "");
-    }
-    
-    /**
-     * Trims the whitespace off the right end of a string.
-     *
-     * @param str The string to trim.
-     * @return The trimmed string.
-     */
-    public static String rTrim(String str) {
-        return str.replaceAll("[\\s\0]+$", "");
-    }
-    
-    /**
-     * Creates a string of the length specified filled with spaces.
-     *
-     * @param num The length to make the string.
-     * @return A new string filled with spaces to the length specified.
-     */
-    public static String spaces(int num) {
-        return fillStringOfLength(' ', num);
-    }
-    
-    /**
-     * Creates a string of the length specified filled with the character specified.
-     *
-     * @param fill The character to fill the string with.
-     * @param size The length to make the string.
-     * @return A new string filled with the specified character to the length specified.
-     */
-    public static String fillStringOfLength(char fill, int size) {
-        return padRight("", size, fill);
-    }
-    
-    /**
-     * Removes the console escape codes from a string.
-     *
-     * @param string The string to operate on.
-     * @return The string with all console escape codes removed.
-     */
-    public static String removeConsoleEscapeCharacters(String string) {
-        return string.replaceAll("\u001B[^m]*m", "");
-    }
-    
-    /**
-     * Pads a string on the right to a specified length.
-     *
-     * @param str     The string to pad.
-     * @param size    The target size of the string.
-     * @param padding The character to pad with.
-     * @return The padded string.
-     */
-    public static String padRight(String str, int size, char padding) {
-        if (str.length() >= size) {
-            return str;
-        }
-        
-        int numPad = size - str.length();
-        char[] chars = new char[numPad];
-        Arrays.fill(chars, padding);
-        String pad = new String(chars);
-        return str + pad;
-    }
-    
-    /**
-     * Pads a string on the left to a specified length.
-     *
-     * @param str     The string to pad.
-     * @param size    The target size of the string.
-     * @param padding The character to pad with.
-     * @return The padded string.
-     */
-    public static String padLeft(String str, int size, char padding) {
-        if (str.length() >= size) {
-            return str;
-        }
-        
-        int numPad = size - str.length();
-        char[] chars = new char[numPad];
-        Arrays.fill(chars, padding);
-        String pad = new String(chars);
-        return pad + str;
-    }
-    
-    /**
-     * Pads a string on the left to a specified length.
-     *
-     * @param str  The string to pad.
-     * @param size The target size of the string.
-     * @return The padded string.
-     */
-    public static String padLeft(String str, int size) {
-        return padLeft(str, size, ' ');
-    }
-    
-    /**
-     * Pads a number string with leading zeros to fit a particular size.
-     *
-     * @param str  The number string to pad.
-     * @param size The specified size of the final string.
-     * @return The padded number string.
-     */
-    public static String padZero(String str, int size) {
-        if (str.length() >= size) {
-            return str;
-        }
-        
-        return padLeft(str, size, '0');
-    }
-    
-    /**
-     * Pads a number string with leading zeros to fit a particular size.
-     *
-     * @param num  The number to pad.
-     * @param size The specified size of the final string.
-     * @return The padded number string.
-     */
-    public static String padZero(int num, int size) {
-        return padZero(Integer.toString(num), size);
-    }
-    
-    
-    //Bound Methods
-    
-    /**
-     * Forces a number within defined bounds.
-     *
-     * @param num The number value.
-     * @param min The minimum value allowed.
-     * @param max The maximum value allowed.
-     * @return The truncated number.
-     */
-    public static Number truncateNum(Number num, Number min, Number max) {
-        Number n = num;
-        if (num.doubleValue() < min.doubleValue()) {
-            n = min;
-        }
-        if (num.doubleValue() > max.doubleValue()) {
-            n = max;
-        }
-        return n;
-    }
-    
-    
-    //DateTime Methods
-    
-    /**
-     * Converts a length in milliseconds to a duration string.
-     *
-     * @param duration         The duration in milliseconds.
-     * @param abbreviate       Whether or not to skip time units with zero value.
-     * @param showMilliseconds Whether or not to include milliseconds in the duration string.
-     * @param abbreviateUnits  Whether or not to abbreviate time units.
-     * @return The duration string.
-     */
-    public static String durationToDurationString(long duration, boolean abbreviate, boolean showMilliseconds, boolean abbreviateUnits) {
-        boolean isNegative = duration < 0;
-        duration = Math.abs(duration);
-        int milliseconds = (int) (duration % 1000);
-        duration = duration / 1000;
-        int seconds = (int) (duration % 60);
-        duration = duration / 60;
-        int minutes = (int) (duration % 60);
-        duration = duration / 60;
-        int hours = (int) (duration % 24);
-        duration = duration / 24;
-        int days = (int) (duration);
-        
-        StringBuilder durationString = new StringBuilder();
-        durationString.append(((!abbreviate && (durationString.length() > 0)) || (days > 0)) ? (days + (abbreviateUnits ? "d " : (" Day" + ((days == 1) ? "" : "s") + " "))) : "");
-        durationString.append(((!abbreviate && (durationString.length() > 0)) || (hours > 0)) ? (hours + (abbreviateUnits ? "h " : (" Hour" + ((hours == 1) ? "" : "s") + " "))) : "");
-        durationString.append(((!abbreviate && (durationString.length() > 0)) || (minutes > 0)) ? (minutes + (abbreviateUnits ? "m " : (" Minute" + ((minutes == 1) ? "" : "s") + " "))) : "");
-        durationString.append(((!abbreviate && (durationString.length() > 0)) || (seconds > 0)) ? (seconds + (abbreviateUnits ? "s " : (" Second" + ((seconds == 1) ? "" : "s") + " "))) : "");
-        durationString.append(showMilliseconds ? (((!abbreviate && (durationString.length() > 0)) || (milliseconds > 0)) ? (milliseconds + (abbreviateUnits ? "ms " : (" Millisecond" + ((milliseconds == 1) ? "" : "s") + " "))) : "") : "");
-        durationString.insert(0, ((isNegative && (durationString.length() > 0)) ? (abbreviateUnits ? "- " : "Negative ") : ""));
-        return trim(durationString.toString());
-    }
-    
-    /**
-     * Converts a length in milliseconds to a duration stamp.
-     *
-     * @param duration         The duration in milliseconds.
-     * @param abbreviate       Whether or not to omit leading and trailing zeros.
-     * @param showMilliseconds Whether or not to include milliseconds in the duration stamp.
-     * @return The duration stamp.
-     */
-    public static String durationToDurationStamp(long duration, boolean abbreviate, boolean showMilliseconds) {
-        boolean isNegative = duration < 0;
-        duration = Math.abs(duration);
-        int milliseconds = (int) (duration % 1000);
-        duration = duration / 1000;
-        int seconds = (int) (duration % 60);
-        duration = duration / 60;
-        int minutes = (int) (duration % 60);
-        duration = duration / 60;
-        int hours = (int) (duration);
-        
-        StringBuilder durationStamp = new StringBuilder();
-        durationStamp.append((!abbreviate || (hours > 0)) ? (((!abbreviate || (durationStamp.length() > 0)) ? padZero(hours, 2) : hours) + ":") : "");
-        durationStamp.append((!abbreviate || (minutes > 0) || (durationStamp.length() > 0)) ? (((!abbreviate || (durationStamp.length() > 0)) ? padZero(minutes, 2) : minutes) + ":") : "");
-        durationStamp.append((!abbreviate || (seconds > 0) || (durationStamp.length() > 0)) ? (((!abbreviate || (durationStamp.length() > 0)) ? padZero(seconds, 2) : seconds) + "") : "0");
-        durationStamp.append(showMilliseconds ? (((!abbreviate || (milliseconds > 0)) ? "." : "") + (!abbreviate ? padZero(milliseconds, 3) : padZero(milliseconds, 3).replaceAll("0+$", ""))) : "");
-        durationStamp.insert(0, (isNegative ? "-" : ""));
-        return durationStamp.toString();
+        return Console.color(str, Console.ConsoleEffect.GREEN);
     }
     
 }
