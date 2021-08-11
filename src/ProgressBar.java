@@ -4,6 +4,8 @@
  * Author:  Zachary Gill
  */
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import commons.console.Console;
@@ -32,6 +34,41 @@ public class ProgressBar {
      * The minimum number of milliseconds that must pass before an update can occur.
      */
     public static final long PROGRESS_BAR_MINIMUM_UPDATE_DELAY = 200;
+    
+    /**
+     * The number of previous updates to use for calculating the rolling average speed.
+     */
+    public static final int ROLLING_AVERAGE_UPDATE_COUNT = 5;
+    
+    /**
+     * The default value of the flag to show the percentage in the progress bar or not.
+     */
+    public static final boolean DEFAULT_SHOW_PERCENTAGE = true;
+    
+    /**
+     * The default value of the flag to show the bar in the progress bar or not.
+     */
+    public static final boolean DEFAULT_SHOW_BAR = true;
+    
+    /**
+     * The default value of the flag to show the ratio in the progress bar or not.
+     */
+    public static final boolean DEFAULT_SHOW_RATIO = true;
+    
+    /**
+     * The default value of the flag to show the speed in the progress bar or not.
+     */
+    public static final boolean DEFAULT_SHOW_SPEED = true;
+    
+    /**
+     * The default value of the flag to show the time remaining in the progress bar or not.
+     */
+    public static final boolean DEFAULT_SHOW_TIME_REMAINING = true;
+    
+    /**
+     * A string printed at the end of the progress bar to help it display in some terminals.
+     */
+    public static final String ENDCAP = Console.ConsoleEffect.BLACK.apply(" ");
     
     
     //Fields
@@ -67,6 +104,11 @@ public class ProgressBar {
     private long initialProgress = 0;
     
     /**
+     * The last couple progress values of the progress bar for calculating the rolling average speed.
+     */
+    private final List<Long> rollingProgress = new ArrayList<>();
+    
+    /**
      * The initial duration of the progress bar in seconds.
      */
     private long initialDuration = 0;
@@ -87,6 +129,11 @@ public class ProgressBar {
     private long firstUpdate = 0;
     
     /**
+     * The last couple times the progress bar was updated for calculating the rolling average speed.
+     */
+    private final List<Long> rollingUpdate = new ArrayList<>();
+    
+    /**
      * The width of the bar in the progress bar.
      */
     private int width;
@@ -100,6 +147,31 @@ public class ProgressBar {
      * A flag indicating whether or not to automatically print the progress bar after an update.
      */
     private boolean autoPrint;
+    
+    /**
+     * A flag indicating whether to show the percentage in the progress bar or not.
+     */
+    private boolean showPercentage = DEFAULT_SHOW_PERCENTAGE;
+    
+    /**
+     * A flag indicating whether to show the bar in the progress bar or not.
+     */
+    private boolean showBar = DEFAULT_SHOW_BAR;
+    
+    /**
+     * A flag indicating whether to show the ratio in the progress bar or not.
+     */
+    private boolean showRatio = DEFAULT_SHOW_RATIO;
+    
+    /**
+     * A flag indicating whether to show the speed in the progress bar or not.
+     */
+    private boolean showSpeed = DEFAULT_SHOW_SPEED;
+    
+    /**
+     * A flag indicating whether to show the time remaining in the progress bar or not.
+     */
+    private boolean showTimeRemaining = DEFAULT_SHOW_TIME_REMAINING;
     
     /**
      * The current progress bar.
@@ -189,26 +261,58 @@ public class ProgressBar {
     //Methods
     
     /**
-     * Builds the progress bar.<br>
-     * This must be displayed with print(), not println().
+     * Builds the progress bar.
      *
      * @return The progress bar.
      * @see #getPercentageString()
      * @see #getBarString()
      * @see #getRatioString()
+     * @see #getSpeedString()
      * @see #getTimeRemainingString()
      */
     @SuppressWarnings("HardcodedLineSeparator")
     public String get() {
         if (update) {
-            progressBar = '\r' + StringUtility.spaces(width + ((String.valueOf(total).length() + units.length()) * 2) + 30) + '\r' +
-                    getPercentageString() + ' ' +
-                    getBarString() + ' ' +
-                    getRatioString() + " - " +
-                    getTimeRemainingString();
+            StringBuilder progressBarBuilder = new StringBuilder();
+            
+            if (getShowPercentage()) {
+                progressBarBuilder.append(getPercentageString());
+            }
+            if (getShowBar()) {
+                progressBarBuilder.append((progressBarBuilder.length() == 0) ? "" : ' ');
+                progressBarBuilder.append(getBarString());
+            }
+            if (getShowRatio()) {
+                progressBarBuilder.append((progressBarBuilder.length() == 0) ? "" : ' ');
+                progressBarBuilder.append(getRatioString());
+            }
+            if (getShowSpeed() && !isComplete()) {
+                progressBarBuilder.append((progressBarBuilder.length() == 0) ? "" : ' ');
+                progressBarBuilder.append(getSpeedString());
+            }
+            if (getShowTimeRemaining()) {
+                progressBarBuilder.append((progressBarBuilder.length() == 0) ? "" : " - ");
+                progressBarBuilder.append(getTimeRemainingString());
+            }
+            
+            progressBar = progressBarBuilder.toString();
         }
         
         return progressBar;
+    }
+    
+    /**
+     * Builds the printable progress bar.<br>
+     * This must be displayed with print(), not println().
+     *
+     * @return The printable progress bar.
+     * @see #get()
+     */
+    public String getPrintable() {
+        int oldLength = StringUtility.removeConsoleEscapeCharacters(progressBar).length();
+        String bar = get();
+        int newLength = StringUtility.removeConsoleEscapeCharacters(bar).length();
+        return '\r' + bar + ' ' + StringUtility.spaces(Math.max((oldLength - newLength - 1), 0)) + ENDCAP;
     }
     
     /**
@@ -242,6 +346,15 @@ public class ProgressBar {
             
             previousUpdate = currentUpdate;
             currentUpdate = System.nanoTime();
+            
+            rollingProgress.add(current);
+            rollingUpdate.add(currentUpdate);
+            if (rollingProgress.size() > ROLLING_AVERAGE_UPDATE_COUNT) {
+                rollingProgress.remove(0);
+            }
+            if (rollingUpdate.size() > ROLLING_AVERAGE_UPDATE_COUNT) {
+                rollingUpdate.remove(0);
+            }
             
             update = true;
         }
@@ -277,10 +390,11 @@ public class ProgressBar {
     /**
      * Prints the progress bar to the console.
      *
-     * @see #get()
+     * @see #getPrintable()
      */
     public synchronized void print() {
-        String bar = get();
+        String bar = getPrintable();
+        bar = bar.replace(" ", " ");
         System.out.print(bar);
         System.out.flush();
         System.err.flush();
@@ -334,6 +448,23 @@ public class ProgressBar {
     }
     
     /**
+     * Calculates the rolling average speed of the progress bar for the last 5 updates.
+     *
+     * @return The rolling average speed of the progress bar in units per second.
+     */
+    public double getRollingAverageSpeed() {
+        if ((rollingProgress.size() != ROLLING_AVERAGE_UPDATE_COUNT) || (rollingUpdate.size() != ROLLING_AVERAGE_UPDATE_COUNT)) {
+            return 0;
+        }
+        
+        double windowTime = (double) Math.max((rollingUpdate.get(ROLLING_AVERAGE_UPDATE_COUNT - 1) - rollingUpdate.get(0)), 0) / TimeUnit.SECONDS.toNanos(1);
+        long windowProgress = Math.max((rollingProgress.get(ROLLING_AVERAGE_UPDATE_COUNT - 1) - rollingProgress.get(0)), 0);
+        
+        return ((windowTime == 0) || (windowProgress == 0)) ? 0 :
+               (windowProgress / windowTime);
+    }
+    
+    /**
      * Calculates the total duration of the progress bar.
      *
      * @return The total duration of the progress bar in nanoseconds.
@@ -374,20 +505,22 @@ public class ProgressBar {
      *
      * @param printTime      Whether or not to print the final time after the progress bar.
      * @param additionalInfo Additional info to print at the end of the progress bar.
-     * @see #get()
+     * @see #getPrintable()
      */
     public void complete(boolean printTime, String additionalInfo) {
         update(total, false);
-        String completeProgressBar = get();
+        String completeProgressBar = getPrintable();
         
+        String extras = "";
         if (printTime) {
             long duration = TimeUnit.NANOSECONDS.toMillis(getTotalDuration());
             String durationString = DateTimeUtility.durationToDurationString(duration, false, false, true);
-            completeProgressBar += " (" + durationString + ')';
+            extras += " (" + durationString + ')';
         }
         if (!additionalInfo.isEmpty()) {
-            completeProgressBar += " - " + additionalInfo;
+            extras += " - " + additionalInfo;
         }
+        completeProgressBar = completeProgressBar.replace(" ", (extras.isEmpty() ? " " : extras));
         
         System.out.println(completeProgressBar);
         System.out.flush();
@@ -421,7 +554,7 @@ public class ProgressBar {
      * @see #getTitle()
      */
     public String getTitleString() {
-        return cyan(getTitle() + ": ");
+        return Console.ConsoleEffect.CYAN.apply(getTitle() + ": ");
     }
     
     /**
@@ -433,8 +566,9 @@ public class ProgressBar {
     public String getPercentageString() {
         int percentage = getPercentage();
         String percentageString = StringUtility.padLeft(String.valueOf(percentage), 3);
+        Console.ConsoleEffect color = ((percentage == 100) ? Console.ConsoleEffect.CYAN : Console.ConsoleEffect.GREEN);
         
-        return ((percentage == 100) ? cyan(percentageString) : green(percentageString)) + '%';
+        return color.apply(percentageString) + '%';
     }
     
     /**
@@ -447,9 +581,10 @@ public class ProgressBar {
         double ratio = getRatio();
         int completed = Math.max((int) ((double) width * ratio), 0);
         int remaining = Math.max((width - completed - 1), 0);
+        Console.ConsoleEffect color = ((completed == width) ? Console.ConsoleEffect.CYAN : Console.ConsoleEffect.GREEN);
         
         String bar = "=".repeat(completed) + ((completed != width) ? '>' : "") + " ".repeat(remaining);
-        return '[' + ((completed == width) ? cyan(bar) : green(bar)) + ']';
+        return '[' + color.apply(bar) + ']';
     }
     
     /**
@@ -459,9 +594,23 @@ public class ProgressBar {
      */
     public String getRatioString() {
         String formattedCurrent = StringUtility.padLeft(String.valueOf(Math.max(Math.min(current, total), 0)), String.valueOf(total).length());
+        Console.ConsoleEffect color = ((current >= total) ? Console.ConsoleEffect.CYAN : Console.ConsoleEffect.GREEN);
         
-        return ((current >= total) ? cyan(formattedCurrent) : green(formattedCurrent)) + units + '/' +
-                cyan(String.valueOf(total)) + units;
+        return color.apply(formattedCurrent) + units + '/' +
+                Console.ConsoleEffect.CYAN.apply(String.valueOf(total)) + units;
+    }
+    
+    /**
+     * Builds the speed string for the progress bar.
+     *
+     * @return The speed string.
+     */
+    public String getSpeedString() {
+        double rollingAverageSpeed = getRollingAverageSpeed();
+        String formattedSpeed = String.format("%.1f", rollingAverageSpeed);
+        
+        return (current >= total) ? "" :
+               "at " + formattedSpeed + units + "/s";
     }
     
     /**
@@ -474,7 +623,7 @@ public class ProgressBar {
         long time = getTimeRemaining();
         String durationStamp = DateTimeUtility.durationToDurationStamp(TimeUnit.SECONDS.toMillis(time), false, false);
         
-        return (current >= total) ? cyan("Complete") :
+        return (current >= total) ? Console.ConsoleEffect.CYAN.apply("Complete") :
                (time == Long.MAX_VALUE) ? "ETA: --:--:--" :
                "ETA: " + durationStamp;
     }
@@ -599,6 +748,51 @@ public class ProgressBar {
         return autoPrint;
     }
     
+    /**
+     * Returns the flag indicating whether to show the percentage in the progress bar or not.
+     *
+     * @return The flag indicating whether to show the percentage in the progress bar or not.
+     */
+    public boolean getShowPercentage() {
+        return showPercentage;
+    }
+    
+    /**
+     * Returns the flag indicating whether to show the bar in the progress bar or not.
+     *
+     * @return The flag indicating whether to show the bar in the progress bar or not.
+     */
+    public boolean getShowBar() {
+        return showBar;
+    }
+    
+    /**
+     * Returns the flag indicating whether to show the ratio in the progress bar or not.
+     *
+     * @return The flag indicating whether to show the ratio in the progress bar or not.
+     */
+    public boolean getShowRatio() {
+        return showRatio;
+    }
+    
+    /**
+     * Returns the flag indicating whether to show the speed in the progress bar or not.
+     *
+     * @return The flag indicating whether to show the speed in the progress bar or not.
+     */
+    public boolean getShowSpeed() {
+        return showSpeed;
+    }
+    
+    /**
+     * Returns the flag indicating whether to show the time remaining in the progress bar or not.
+     *
+     * @return The flag indicating whether to show the time remaining in the progress bar or not.
+     */
+    public boolean getShowTimeRemaining() {
+        return showTimeRemaining;
+    }
+    
     
     //Setters
     
@@ -629,27 +823,49 @@ public class ProgressBar {
         this.autoPrint = autoPrint;
     }
     
-    
-    //Functions
-    
     /**
-     * Creates a cyan string.
+     * Sets the flag indicating whether to show the percentage in the progress bar or not.
      *
-     * @param str The string.
-     * @return The cyan string.
+     * @param showPercentage The flag indicating whether to show the percentage in the progress bar or not.
      */
-    public static String cyan(String str) {
-        return Console.color(str, Console.ConsoleEffect.CYAN);
+    public void setShowPercentage(boolean showPercentage) {
+        this.showPercentage = showPercentage;
     }
     
     /**
-     * Creates a green string.
+     * Sets the flag indicating whether to show the bar in the progress bar or not.
      *
-     * @param str The string.
-     * @return The green string.
+     * @param showBar The flag indicating whether to show the bar in the progress bar or not.
      */
-    public static String green(String str) {
-        return Console.color(str, Console.ConsoleEffect.GREEN);
+    public void setShowBar(boolean showBar) {
+        this.showBar = showBar;
+    }
+    
+    /**
+     * Sets the flag indicating whether to show the ratio in the progress bar or not.
+     *
+     * @param showRatio The flag indicating whether to show the ratio in the progress bar or not.
+     */
+    public void setShowRatio(boolean showRatio) {
+        this.showRatio = showRatio;
+    }
+    
+    /**
+     * Sets the flag indicating whether to show the speed in the progress bar or not.
+     *
+     * @param showSpeed The flag indicating whether to show the speed in the progress bar or not.
+     */
+    public void setShowSpeed(boolean showSpeed) {
+        this.showSpeed = showSpeed;
+    }
+    
+    /**
+     * Sets the flag indicating whether to show the time remaining in the progress bar or not.
+     *
+     * @param showTimeRemaining The flag indicating whether to show the time remaining in the progress bar or not.
+     */
+    public void setShowTimeRemaining(boolean showTimeRemaining) {
+        this.showTimeRemaining = showTimeRemaining;
     }
     
 }
