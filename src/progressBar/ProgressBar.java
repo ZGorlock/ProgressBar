@@ -1,8 +1,10 @@
 /*
  * File:    ProgressBar.java
- * Package:
+ * Package: progressBar
  * Author:  Zachary Gill
  */
+
+package progressBar;
 
 import java.util.ArrayList;
 import java.util.List;

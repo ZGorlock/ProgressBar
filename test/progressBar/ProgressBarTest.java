@@ -1,8 +1,10 @@
 /*
  * File:    ProgressBarTest.java
- * Package:
+ * Package: progressBar
  * Author:  Zachary Gill
  */
+
+package progressBar;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
