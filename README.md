@@ -6,7 +6,7 @@ Console Progress Bar for Downloads or Lengthy Processes
 
 ### With Autoprint
 
-        ConsoleProgressBar bar = new ConsoleProgressBar("Test Progress Bar", 5000000, "MB");
+        ProgressBar bar = new ProgressBar("Test Progress Bar", 50000, "MB");
 
         long progress = 0;
         
@@ -16,26 +16,26 @@ Console Progress Bar for Downloads or Lengthy Processes
             } catch (InterruptedException ignored) {
             }
             
-            progress += 5000;
+            progress += 100;
             bar.update(progress);
         } while (!bar.isComplete());
         bar.complete();
 ####
 
         Test Progress Bar: 
-          0% [>                               ]    5000MB/5000000MB - ETA: 00:00:00
+          0% [>                               ]   100MB/50000MB at 0.0MB/s - ETA: 00:00:00  
         ...
-          4% [=>                              ]  245000MB/5000000MB - ETA: 00:00:59
+          4% [=>                              ]  2100MB/50000MB at 1978.6MB/s - ETA: 00:00:23  
         ...
-         54% [=================>              ] 2745000MB/5000000MB - ETA: 00:00:28
+         54% [=================>              ] 27300MB/50000MB at 1978.7MB/s - ETA: 00:00:11  
         ...
-         94% [==============================> ] 4705000MB/5000000MB - ETA: 00:00:03
+         94% [==============================> ] 47300MB/50000MB at 1977.8MB/s - ETA: 00:00:01  
         ...
-        100% [================================] 5000000MB/5000000MB - Complete (1m 3s)
+        100% [================================] 50000MB/50000MB - Complete (25s) 
 
 ### Without Autoprint
 
-        ConsoleProgressBar bar = new ConsoleProgressBar("Test Progress Bar", 5000000, "MB");
+        ProgressBar bar = new ProgressBar("Test Progress Bar", 5000, "MB");
         bar.setAutoPrint(false);
 
         long progress = 0;
@@ -46,7 +46,7 @@ Console Progress Bar for Downloads or Lengthy Processes
             } catch (InterruptedException ignored) {
             }
             
-            progress += 5000;
+            progress += 100;
             if (bar.update(progress)) {
                 bar.print();
             }
@@ -55,15 +55,15 @@ Console Progress Bar for Downloads or Lengthy Processes
 ####
 
         Test Progress Bar: 
-          0% [>                               ]    5000MB/5000000MB - ETA: 00:00:00
+          0% [>                               ]   100MB/50000MB at 0.0MB/s - ETA: 00:00:00  
         ...
-          4% [=>                              ]  245000MB/5000000MB - ETA: 00:00:59
+          4% [=>                              ]  2100MB/50000MB at 1978.6MB/s - ETA: 00:00:23  
         ...
-         54% [=================>              ] 2745000MB/5000000MB - ETA: 00:00:28
+         54% [=================>              ] 27300MB/50000MB at 1978.7MB/s - ETA: 00:00:11  
         ...
-         94% [==============================> ] 4705000MB/5000000MB - ETA: 00:00:03
+         94% [==============================> ] 47300MB/50000MB at 1977.8MB/s - ETA: 00:00:01  
         ...
-        100% [================================] 10000000MB/10000000MB - Complete (1m 3s) All Done
+        100% [================================] 50000MB/50000MB - Complete (25s) All Done
 
 
 ## Usage:
