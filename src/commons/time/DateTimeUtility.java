@@ -16,11 +16,21 @@ import java.util.regex.Pattern;
 
 import commons.math.NumberStringUtility;
 import commons.string.StringUtility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A resource class that provides additional date-time functionality.
  */
 public final class DateTimeUtility {
+    
+    //Logger
+    
+    /**
+     * The logger.
+     */
+    private static final Logger logger = LoggerFactory.getLogger(DateTimeUtility.class);
+    
     
     //Enums
     
@@ -221,7 +231,7 @@ public final class DateTimeUtility {
         if (timeMatcher.matches()) {
             int hour = Integer.parseInt(timeMatcher.group("hour"));
             int minute = Integer.parseInt(timeMatcher.group("minute"));
-            int second = (StringUtility.numberOfOccurrences(":", time) > 1) ? Integer.parseInt(timeMatcher.group("second")) : 0;
+            int second = (StringUtility.numberOfOccurrences(time, ":") > 1) ? Integer.parseInt(timeMatcher.group("second")) : 0;
             
             if (!validTime(hour, minute, second)) {
                 return time;
@@ -283,7 +293,7 @@ public final class DateTimeUtility {
         if (timeMatcher.matches()) {
             int hour = Integer.parseInt(timeMatcher.group("hour"));
             int minute = Integer.parseInt(timeMatcher.group("minute"));
-            int second = (StringUtility.numberOfOccurrences(":", time) > 1) ? Integer.parseInt(timeMatcher.group("second")) : 0;
+            int second = (StringUtility.numberOfOccurrences(time, ":") > 1) ? Integer.parseInt(timeMatcher.group("second")) : 0;
             
             if (!validTime(hour, minute, second)) {
                 return time;
@@ -581,7 +591,7 @@ public final class DateTimeUtility {
      */
     public static long durationStampToDuration(String durationStamp) {
         boolean isNegative = durationStamp.startsWith("-");
-        durationStamp = durationStamp.replaceAll("^-", "");
+        durationStamp = durationStamp.replaceAll("^-", "").replaceAll("(?<=\\.\\d{3}).+$", "");
         int[] unitValues = new int[4];
         
         List<String> units = StringUtility.tokenize(durationStamp, ":", true);
@@ -696,7 +706,7 @@ public final class DateTimeUtility {
         if (timeMatcher.matches()) {
             int hour = Integer.parseInt(timeMatcher.group("hour"));
             int minute = Integer.parseInt(timeMatcher.group("minute"));
-            int second = (StringUtility.numberOfOccurrences(":", time) > 1) ? Integer.parseInt(timeMatcher.group("second")) : 0;
+            int second = (StringUtility.numberOfOccurrences(time, ":") > 1) ? Integer.parseInt(timeMatcher.group("second")) : 0;
             
             return validTime(hour, minute, second);
             

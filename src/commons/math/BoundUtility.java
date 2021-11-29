@@ -7,10 +7,21 @@
 
 package commons.math;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A resource class that provides additional bound functionality.
  */
 public final class BoundUtility {
+    
+    //Logger
+    
+    /**
+     * The logger.
+     */
+    private static final Logger logger = LoggerFactory.getLogger(BoundUtility.class);
+    
     
     //Functions
     

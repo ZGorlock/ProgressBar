@@ -26,9 +26,16 @@
         
         <!-- COMMONS -->
         <commons-lang3.version>3.9</commons-lang3.version>
+    
+        <!-- LOGGING -->
+        <slf4j.version>1.7.30</slf4j.version>
+        <logback.version>1.2.3</logback.version>
         
         <!-- UNIT TESTS -->
         <powermock.version>2.0.5</powermock.version>
+    
+        <!-- MATH -->
+        <big-math.version>2.1.0</big-math.version>
     </properties>
     
     
@@ -38,6 +45,29 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${commons-lang3.version}</version>
+        </dependency>
+    
+        <!-- LOGGING -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         
         <!-- UNIT TESTS -->
@@ -50,6 +80,13 @@
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito2</artifactId>
             <version>${powermock.version}</version>
+        </dependency>
+    
+        <!-- MATH -->
+        <dependency>
+            <groupId>ch.obermuhlner</groupId>
+            <artifactId>big-math</artifactId>
+            <version>${big-math.version}</version>
         </dependency>
     </dependencies>
     

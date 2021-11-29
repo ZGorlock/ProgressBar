@@ -11,11 +11,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Defines console effects.<br>
  * Support for these effects can not be guaranteed on all consoles.
  */
 public final class Console {
+    
+    //Logger
+    
+    /**
+     * The logger.
+     */
+    private static final Logger logger = LoggerFactory.getLogger(Console.class);
+    
     
     //Enums
     

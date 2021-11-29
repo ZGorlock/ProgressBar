@@ -21,11 +21,19 @@ import commons.string.StringUtility;
 import org.junit.Assert;
 import org.powermock.reflect.Whitebox;
 import org.powermock.reflect.exceptions.MethodInvocationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A resource class that provides test utilities.
  */
 public final class TestUtils {
+    
+    /**
+     * The logger.
+     */
+    private static final Logger logger = LoggerFactory.getLogger(TestUtils.class);
+    
     
     //Constants
     
@@ -248,6 +256,7 @@ public final class TestUtils {
                 return getField(superClazz, object, fieldName);
             }
             
+            logger.warn("Failed to get field: " + fieldName + " for class: " + clazz.getSimpleName());
             return null;
         }
     }
@@ -306,6 +315,7 @@ public final class TestUtils {
                 return setField(superClazz, object, fieldName, value);
             }
             
+            logger.warn("Failed to set field: " + fieldName + " for class: " + clazz.getSimpleName());
             return false;
         }
     }
@@ -334,6 +344,23 @@ public final class TestUtils {
      */
     public static boolean setField(Object object, String fieldName, Object value) {
         return setField(object.getClass(), object, fieldName, value);
+    }
+    
+    /**
+     * Gets an enum from a class.
+     *
+     * @param clazz    The class.
+     * @param enumName The name of the enum.
+     * @return The enum from the class, or null if it cannot be retrieved.
+     */
+    public static Class<?> getEnum(Class<?> clazz, String enumName) {
+        String enumPath = clazz.getName() + '$' + enumName;
+        try {
+            return Class.forName(enumPath);
+        } catch (Exception e) {
+            logger.warn("Failed to get enum: " + enumName + " for class: " + clazz.getSimpleName());
+            return null;
+        }
     }
     
     /**
