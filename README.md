@@ -84,8 +84,14 @@ The Progress Bar is completed when the progress has reached the quantity provide
 
 After completion, the complete() method should be called. This will use System.out.println() to finish the Progress Bar line, as well as optionally add some additional information.
 
-You can pass in two arguments to complete(), whether or not to print the total time elapsed (on by default), and an additional message to include at the end, if any. In the second example above we include the message: "All Done".
+The complete() method could also be called at any time to complete the Progress Bar. You can pass in two arguments to complete(), whether or not to print the total time elapsed (on by default), and an additional message to include at the end, if any. In the second example above we include the message: "All Done".
+
+The fail() method can be called at any time to fail the Progress Bar. This will use System.out.println() to finish the Progress Bar line, as well as optionally add some additional information.
+
+You can pass in two arguments to fail(), whether or not to print the total time elapsed (on by default), and an additional message or error message to include at the end, if any.
 
 There are overloaded constructors where you can set things such as the width of the progress bar, and setting autoPrint without an additional line. You can use setters to update the total quantity during execution, as well as setting an initial progress and initial duration for resumable Progress Bars. There is also a method addOne() as an alternative to update() for specific use cases.
+
+If you subclass ProgressBar, you can overload the processLog() methods to conditionally update the Progress Bar based on logs that are passed to the method. You can also mark the log as an error log by setting the second parameter to true; these can be stored or processed differently and at your own discretion. 
 
 See the source code or unit tests for a more detailed understanding of the features and function of the Progress Bar.
