@@ -15,13 +15,23 @@ import java.util.stream.IntStream;
 
 import commons.console.Console;
 import commons.math.BoundUtility;
-import commons.string.StringUtility;
+import commons.object.string.StringUtility;
 import commons.time.DateTimeUtility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A progress bar for the console.
  */
 public class ProgressBar {
+    
+    //Logger
+    
+    /**
+     * The logger.
+     */
+    private static final Logger logger = LoggerFactory.getLogger(ProgressBar.class);
+    
     
     //Constants
     
@@ -144,6 +154,11 @@ public class ProgressBar {
     private int width;
     
     /**
+     * The indent size of the bar in the progress bar.
+     */
+    private int indent = 0;
+    
+    /**
      * The units of the progress bar.
      */
     private String units;
@@ -156,7 +171,7 @@ public class ProgressBar {
     /**
      * A flag indicating whether the progress bar has not been printed yet or not.
      */
-    private AtomicBoolean firstPrint = new AtomicBoolean(true);
+    private final AtomicBoolean firstPrint = new AtomicBoolean(true);
     
     /**
      * A flag indicating whether to show the percentage in the progress bar or not.
@@ -191,12 +206,12 @@ public class ProgressBar {
     /**
      * A flag indicating whether there was an update to the progress bar or not.
      */
-    private AtomicBoolean update = new AtomicBoolean(false);
+    private final AtomicBoolean update = new AtomicBoolean(false);
     
     /**
      * A flag indicating whether the progress bar has failed or not.
      */
-    private AtomicBoolean failed = new AtomicBoolean(false);
+    private final AtomicBoolean failed = new AtomicBoolean(false);
     
     
     //Constructors
@@ -285,7 +300,6 @@ public class ProgressBar {
      * @see #getSpeedString()
      * @see #getTimeRemainingString()
      */
-    @SuppressWarnings("HardcodedLineSeparator")
     public String get() {
         if (update.get()) {
             StringBuilder progressBarBuilder = new StringBuilder();
@@ -310,7 +324,7 @@ public class ProgressBar {
                 progressBarBuilder.append(getTimeRemainingString());
             }
             
-            progressBar = progressBarBuilder.toString();
+            progressBar = StringUtility.spaces(indent) + progressBarBuilder;
         }
         
         return progressBar;
@@ -344,7 +358,7 @@ public class ProgressBar {
         }
         
         firstUpdate = (firstUpdate == 0) ? System.nanoTime() : firstUpdate;
-        progress = BoundUtility.truncateNum(newProgress, 0, total).longValue();
+        progress = BoundUtility.truncate(newProgress, 0L, total);
         
         boolean needsUpdate = (Math.abs(System.nanoTime() - currentUpdate) >= TimeUnit.MILLISECONDS.toNanos(PROGRESS_BAR_MINIMUM_UPDATE_DELAY));
         if (needsUpdate || (progress == total)) {
@@ -843,6 +857,15 @@ public class ProgressBar {
     }
     
     /**
+     * Returns the indent size of the progress bar.
+     *
+     * @return The indent size of the progress bar.
+     */
+    public int getIndent() {
+        return indent;
+    }
+    
+    /**
      * Returns the units of the progress bar.
      *
      * @return The units of the progress bar.
@@ -997,6 +1020,15 @@ public class ProgressBar {
      */
     public void setAutoPrint(boolean autoPrint) {
         this.autoPrint = autoPrint;
+    }
+    
+    /**
+     * Sets the indent size of the progress bar.
+     *
+     * @param indent The indent size of the progress bar.
+     */
+    public void setIndent(int indent) {
+        this.indent = indent;
     }
     
     /**

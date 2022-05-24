@@ -90,7 +90,7 @@ The fail() method can be called at any time to fail the Progress Bar. This will 
 
 You can pass in two arguments to fail(), whether or not to print the total time elapsed (on by default), and an additional message or error message to include at the end, if any.
 
-There are overloaded constructors where you can set things such as the width of the progress bar, and setting autoPrint without an additional line. You can use setters to update the total quantity during execution, as well as setting an initial progress and initial duration for resumable Progress Bars. There is also a method addOne() as an alternative to update() for specific use cases.
+There are overloaded constructors where you can set things such as the width of the progress bar, and setting autoPrint without an additional line. You can use setters to update the total quantity and units during execution, turn auto print on or off, set an indent before the progress bar, or show or hide certain elements of the progress bar. You can also set an initial progress and initial duration for resumable Progress Bars. There is also a method addOne() as an alternative to update() for specific use cases.
 
 If you subclass ProgressBar, you can overload the processLog() methods to conditionally update the Progress Bar based on logs that are passed to the method. You can also mark the log as an error log by setting the second parameter to true; these can be stored or processed differently and at your own discretion. 
 
