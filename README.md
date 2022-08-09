@@ -1,8 +1,10 @@
 # ProgressBar
-Console Progress Bar for Downloads or Lengthy Processes
 
+## Console Progress Bar for Downloads or Lengthy Processes
 
-## Examples:
+***
+
+## Examples
 
 ### With Autoprint
 
@@ -20,6 +22,7 @@ Console Progress Bar for Downloads or Lengthy Processes
             bar.update(progress);
         } while (!bar.isComplete());
         bar.complete();
+
 ####
 
         Test Progress Bar: 
@@ -52,6 +55,7 @@ Console Progress Bar for Downloads or Lengthy Processes
             }
         } while (!bar.isComplete());
         bar.complete(true, "All Done");
+
 ####
 
         Test Progress Bar: 
@@ -65,8 +69,10 @@ Console Progress Bar for Downloads or Lengthy Processes
         ...
         100% [================================] 50000MB/50000MB - Complete (25s) All Done
 
+ 
+***
 
-## Usage:
+## Usage
 
 When you create a new Progress Bar, you will pass in the title, the total quantity, and the units of the bar. You can see that these are included in the output or the examples.
 
@@ -95,3 +101,6 @@ There are overloaded constructors where you can set things such as the width of 
 If you subclass ProgressBar, you can overload the processLog() methods to conditionally update the Progress Bar based on logs that are passed to the method. You can also mark the log as an error log by setting the second parameter to true; these can be stored or processed differently and at your own discretion. 
 
 See the source code or unit tests for a more detailed understanding of the features and function of the Progress Bar.
+
+ 
+***
