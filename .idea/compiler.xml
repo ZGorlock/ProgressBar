@@ -6,7 +6,7 @@
         <sourceOutputDir name="bin/generated-sources/annotations" />
         <sourceTestOutputDir name="bin/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="ProgressBar" />
+        <module name="progress-bar" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
